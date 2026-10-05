@@ -1,0 +1,5 @@
+.env
+web/config.js
+web/pyodide/
+__pycache__/
+*.pyc

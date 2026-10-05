@@ -1,0 +1,153 @@
+{
+ "shift_h": 12.0,
+ "changeover_h": 0.3333333333333333,
+ "break_h": 0.5,
+ "break_at_h": 6.0,
+ "horizon_h": 168.0,
+ "warmup_h": 12.0,
+ "op_hours_per_year": 8000.0,
+ "fleets": {
+  "A": {
+   "n": 12,
+   "payload": 100.0,
+   "load_min": 3.0,
+   "spot_min": 0.7,
+   "dump_min": 1.0,
+   "cost_h": 665.0,
+   "mtbf_h": 60.0,
+   "mttr_h": 6.0,
+   "beta": 1.8
+  },
+  "B": {
+   "n": 8,
+   "payload": 60.0,
+   "load_min": 1.8,
+   "spot_min": 0.7,
+   "dump_min": 0.8,
+   "cost_h": 410.0,
+   "mtbf_h": 50.0,
+   "mttr_h": 5.0,
+   "beta": 1.6
+  }
+ },
+ "cv_service": 0.25,
+ "sigma_travel": 0.08,
+ "cv_repair": 0.6,
+ "grade_pts": [
+  -8,
+  -4,
+  0,
+  4,
+  8,
+  10
+ ],
+ "v_loaded": [
+  22,
+  30,
+  40,
+  24,
+  15,
+  12
+ ],
+ "v_empty": [
+  30,
+  40,
+  45,
+  35,
+  28,
+  24
+ ],
+ "speed_factor": 1.0,
+ "edges": [
+  [
+   "F1",
+   "J1",
+   0.6,
+   4
+  ],
+  [
+   "F2",
+   "J1",
+   1.1,
+   6
+  ],
+  [
+   "F3",
+   "J1",
+   1.8,
+   8
+  ],
+  [
+   "F4",
+   "J1",
+   0.8,
+   5
+  ],
+  [
+   "J1",
+   "J2",
+   2.2,
+   8
+  ],
+  [
+   "J1",
+   "J2",
+   3.4,
+   5
+  ],
+  [
+   "J2",
+   "CR",
+   1.2,
+   0
+  ],
+  [
+   "J2",
+   "RP",
+   1.0,
+   0
+  ],
+  [
+   "J2",
+   "WD",
+   2.6,
+   1
+  ]
+ ],
+ "ore_fronts": [
+  "F1",
+  "F2",
+  "F3"
+ ],
+ "waste_fronts": [
+  "F4"
+ ],
+ "plan_ore_t": 12000.0,
+ "strip_ratio": 2.0,
+ "ore_share": {
+  "F1": 0.3,
+  "F2": 0.35,
+  "F3": 0.35
+ },
+ "front_band": 0.2,
+ "loader_avail": 1.0,
+ "n_loaders": {
+  "F1": 1,
+  "F2": 1,
+  "F3": 1,
+  "F4": 2
+ },
+ "n_dump_cr": 1,
+ "n_dump_rp": 2,
+ "n_dump_wd": 2,
+ "crusher_tph": 1400.0,
+ "hopper_t": 400.0,
+ "pad_cap_t": 20000.0,
+ "rehandle_tph": 900.0,
+ "rehandle_below": 0.6,
+ "crusher_outage": null,
+ "predictive_phi": 0.0,
+ "planned_factor": 0.5,
+ "dispatch": "fixed",
+ "compliance": 1.0
+}

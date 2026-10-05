@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lukaut Haul Twin</title>
+<style>
+:root{--bg:#f6f8fa;--card:#fff;--ink:#1c2b33;--mute:#5d6b73;--line:#d9e1e6;--teal:#1f5c73;--teal2:#2f8aa8;--amber:#d98a1f;--red:#c0392b;--green:#2e8b57;--grey:#9aa7ae}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--teal);color:#fff;padding:12px 20px;display:flex;flex-wrap:wrap;align-items:baseline;gap:12px}
+header h1{font-size:18px;margin:0}
+header .sub{opacity:.85;font-size:12.5px}
+.badge{margin-left:auto;background:#ffffff22;border:1px solid #ffffff55;padding:2px 8px;border-radius:12px;font-size:12px}
+nav{display:flex;gap:2px;background:#e8eef2;padding:0 14px;border-bottom:1px solid var(--line)}
+nav button{border:0;background:none;padding:10px 14px;font:inherit;cursor:pointer;color:var(--mute);border-bottom:3px solid transparent}
+nav button.on{color:var(--teal);border-bottom-color:var(--teal);font-weight:600}
+main{padding:14px;max-width:1280px;margin:0 auto}
+.tab{display:none}.tab.on{display:block}
+.grid{display:grid;gap:12px}
+.live{grid-template-columns:250px minmax(0,1fr) 270px}
+@media(max-width:1000px){.live{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px}
+.card h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute)}
+label{display:block;margin:8px 0 2px;font-size:12.5px;color:var(--mute)}
+select,input[type=range],input[type=number]{width:100%}
+select,input[type=number]{padding:5px;border:1px solid var(--line);border-radius:5px;font:inherit}
+button.act{width:100%;margin-top:10px;padding:8px;border:0;border-radius:6px;background:var(--teal);color:#fff;font:inherit;cursor:pointer}
+button.act.alt{background:var(--teal2)}
+button.act:disabled{background:var(--grey);cursor:wait}
+button.sm{padding:4px 9px;border:1px solid var(--line);background:#fff;border-radius:5px;cursor:pointer;font:inherit}
+canvas{display:block;width:100%;background:#fcfdfe;border:1px solid var(--line);border-radius:6px}
+.row{display:flex;gap:8px;align-items:center;margin-top:8px}
+.row input[type=range]{flex:1}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.kpi b{display:block;font-size:19px}.kpi span{font-size:11.5px;color:var(--mute)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mute);font-weight:600}
+.status{font-size:12px;color:var(--mute);margin-top:6px;min-height:18px}
+.pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11.5px;border:1px solid var(--line);margin-right:4px}
+pre{background:#10222b;color:#d6f0fb;padding:10px;border-radius:6px;overflow:auto;max-height:260px;font-size:12px}
+details summary{cursor:pointer;color:var(--teal)}
+.two{grid-template-columns:1fr 1fr}@media(max-width:900px){.two{grid-template-columns:1fr}}
+.note{font-size:12px;color:var(--mute)}
+.legend span{margin-right:12px;font-size:12px;white-space:nowrap}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
+svg text{font:12px system-ui,sans-serif}
+</style>
+</head>
+<body>
+<header>
+  <h1>Lukaut Haul Twin</h1>
+  <span class="sub">Predict, Prescribe, Prove: optimise a haul plan, then test it under queues, breakdowns and shift changes</span>
+  <span class="badge">Notional pit data. Shows a method, not a forecast for any site.</span>
+</header>
+<nav id="nav">
+  <button data-t="live" class="on">Live twin</button>
+  <button data-t="results">Scenario results</button>
+  <button data-t="plug">How it plugs in</button>
+  <button data-t="about">About and limits</button>
+</nav>
+<main>
+
+<!-- ============================ LIVE ============================ -->
+<section id="live" class="tab on">
+ <div class="grid live">
+  <div class="card">
+    <h3>Scenario</h3>
+    <label>Dispatch and conditions</label>
+    <select id="scn">
+      <option value="S0">S0 Fixed truck-to-front assignment</option>
+      <option value="S2" selected>S2 Optimiser-guided dispatch</option>
+      <option value="S3">S3 Wet season, speeds cut 25%</option>
+      <option value="S4">S4 Crusher outage, 4 h at hour 12</option>
+      <option value="S5">S5 Predictive maintenance on (fixed dispatch)</option>
+    </select>
+    <label>Trucks in fleet A (100 t): <b id="nAv">12</b></label>
+    <input id="nA" type="range" min="6" max="18" value="12">
+    <label>Trucks in fleet B (60 t): <b id="nBv">8</b></label>
+    <input id="nB" type="range" min="4" max="12" value="8">
+    <label>Dispatchers who follow the advice: <b id="cpv">100</b>%</label>
+    <input id="cp" type="range" min="0" max="100" step="10" value="100">
+    <label>Hours simulated (replay length)</label>
+    <select id="hz"><option value="12">12 h (1 shift)</option><option value="24" selected>24 h (2 shifts)</option><option value="48">48 h</option></select>
+    <label>Replications for the statistics (1 is animated)</label>
+    <input id="nr" type="number" min="1" max="20" value="3">
+    <button class="act" id="run" disabled>Run scenario</button>
+    <button class="act alt" id="cmp" disabled>Compare S0 and S2 (paired)</button>
+    <div class="status" id="status">Starting the Python engine in your browser...</div>
+    <div class="note" style="margin-top:8px">The engine is the same Python code that produced the report results. It runs here in WebAssembly, so no server is needed.</div>
+  </div>
+
+  <div>
+   <div class="card">
+     <h3>Haul map replay</h3>
+     <canvas id="map" width="900" height="420"></canvas>
+     <div class="row">
+       <button class="sm" id="play">Play</button>
+       <input id="seek" type="range" min="0" max="1000" value="0">
+       <select id="spd" style="width:110px"><option value="300">300x</option><option value="900">900x</option><option value="1800" selected>1800x</option><option value="3600">3600x</option></select>
+       <span id="clock" style="width:90px;text-align:right">0.0 h</span>
+     </div>
+     <div class="legend" style="margin-top:6px">
+       <span><i class="dot" style="background:#1f5c73"></i>Fleet A loaded</span><span><i class="dot" style="background:#9cc7d8"></i>Fleet A empty</span>
+       <span><i class="dot" style="background:#d98a1f"></i>Fleet B loaded</span><span><i class="dot" style="background:#f0cf9c"></i>Fleet B empty</span>
+       <span><i class="dot" style="background:#fff;border:2px solid #d98a1f"></i>Queueing</span><span><i class="dot" style="background:#c0392b"></i>Broken down</span><span><i class="dot" style="background:#9aa7ae"></i>Stand-by or shift change</span>
+     </div>
+   </div>
+   <div class="grid two" style="margin-top:12px">
+     <div class="card"><h3>Tonnes moved over time</h3><canvas id="cum" width="440" height="220"></canvas></div>
+     <div class="card"><h3>Statistics (mean, 95% interval)</h3><div id="stats" class="note">Run a scenario to see statistics.</div></div>
+   </div>
+   <div class="grid two" style="margin-top:12px">
+     <div class="card"><h3>Plan chosen by the optimiser (per 12 h shift)</h3><div id="plan" class="note">Shown for optimiser-guided scenarios.</div></div>
+     <div class="card"><h3>Paired comparison</h3><canvas id="cmpc" width="440" height="200"></canvas><div id="cmpt" class="note"></div></div>
+   </div>
+  </div>
+
+  <div>
+   <div class="card">
+     <h3>At the replay time</h3>
+     <div class="kpis">
+       <div class="kpi"><b id="k1">0</b><span>Ore delivered, t</span></div>
+       <div class="kpi"><b id="k2">0</b><span>Waste dumped, t</span></div>
+       <div class="kpi"><b id="k3">0</b><span>Trucks queueing</span></div>
+       <div class="kpi"><b id="k4">0</b><span>Trucks broken down</span></div>
+       <div class="kpi"><b id="k5">0</b><span>Trucks moving</span></div>
+       <div class="kpi"><b id="k6">0</b><span>Strip ratio so far</span></div>
+     </div>
+   </div>
+   <div class="card" style="margin-top:12px">
+     <h3>Save and share (optional)</h3>
+     <div id="dbmsg" class="note">Database not configured. The page works without it.</div>
+     <button class="sm" id="save" style="display:none">Save this run</button>
+     <button class="sm" id="load" style="display:none">Show saved runs</button>
+     <div id="saved" class="note" style="margin-top:6px"></div>
+   </div>
+   <div class="card" style="margin-top:12px">
+     <h3>Engine request and response</h3>
+     <details><summary>Last request (JSON)</summary><pre id="reqj">{}</pre></details>
+     <details><summary>Last response (JSON, trimmed)</summary><pre id="resj">{}</pre></details>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- ============================ RESULTS ============================ -->
+<section id="results" class="tab">
+ <div class="grid two">
+   <div class="card"><h3>Plan-equivalent tonnes per shift, 30 replications</h3><canvas id="r1" width="560" height="300"></canvas><div class="note" id="r1t"></div></div>
+   <div class="card"><h3>Throughput against fleet size (fleet A trucks, fleet B fixed at 8)</h3><canvas id="r2" width="560" height="300"></canvas><div class="note" id="r2t"></div></div>
+ </div>
+ <div class="grid two" style="margin-top:12px">
+   <div class="card"><h3>Gain of optimiser-guided dispatch under one-at-a-time changes</h3><canvas id="r3" width="560" height="320"></canvas><div class="note">Gain in cost per plan-equivalent tonne at equal fleet cost, with 95% interval. Against fixed assignment (S0).</div></div>
+   <div class="card"><h3>Other scenarios</h3><div id="r4"></div></div>
+ </div>
+</section>
+
+<!-- ============================ PLUG ============================ -->
+<section id="plug" class="tab">
+ <div class="card">
+  <h3>Standalone first, plug-in second</h3>
+  <p>The simulator core has no screen and no files of its own. It takes one JSON request and returns one JSON response, so the same code runs as this page, from a command line, behind a small local web service, or inside a larger tool. Only the thin adapters around it change.</p>
+  <svg viewBox="0 0 900 250" width="100%" role="img" aria-label="Architecture: planning and fleet tools, adapters, core engine, advice to dispatcher">
+   <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#1f5c73"/></marker></defs>
+   <g fill="#fff" stroke="#1f5c73" stroke-width="1.5">
+    <rect x="10" y="20" width="190" height="90" rx="8"/><rect x="10" y="140" width="190" height="90" rx="8"/>
+    <rect x="260" y="60" width="150" height="130" rx="8" fill="#eaf3f7"/>
+    <rect x="470" y="40" width="190" height="170" rx="8" fill="#1f5c73"/>
+    <rect x="720" y="20" width="170" height="90" rx="8"/><rect x="720" y="140" width="170" height="90" rx="8"/>
+   </g>
+   <g fill="#1c2b33"><text x="105" y="48" text-anchor="middle" font-weight="700">Mine planning and</text><text x="105" y="66" text-anchor="middle" font-weight="700">scheduling tool</text><text x="105" y="88" text-anchor="middle" font-size="11">schedule, fronts, tonnes</text>
+   <text x="105" y="168" text-anchor="middle" font-weight="700">Fleet and road data</text><text x="105" y="188" text-anchor="middle" font-size="11">trucks, payloads, cycle</text><text x="105" y="204" text-anchor="middle" font-size="11">times, breakdown history</text>
+   <text x="335" y="110" text-anchor="middle" font-weight="700">Adapters</text><text x="335" y="130" text-anchor="middle" font-size="11">CSV and JSON files,</text><text x="335" y="146" text-anchor="middle" font-size="11">or a script that</text><text x="335" y="162" text-anchor="middle" font-size="11">calls the service</text></g>
+   <g fill="#fff"><text x="565" y="72" text-anchor="middle" font-weight="700">Core engine (Python)</text>
+    <text x="565" y="100" text-anchor="middle" font-size="12">Predict: failure model</text><text x="565" y="122" text-anchor="middle" font-size="12">Prescribe: linear program</text><text x="565" y="144" text-anchor="middle" font-size="12">Prove: simulation</text><text x="565" y="176" text-anchor="middle" font-size="11">JSON in, JSON out</text></g>
+   <g fill="#1c2b33"><text x="805" y="48" text-anchor="middle" font-weight="700">Advice for a person</text><text x="805" y="68" text-anchor="middle" font-size="11">plan, range, verification</text><text x="805" y="84" text-anchor="middle" font-size="11">status; the person decides</text>
+   <text x="805" y="168" text-anchor="middle" font-weight="700">Planner or dispatch</text><text x="805" y="188" text-anchor="middle" font-size="11">system reads the plan file;</text><text x="805" y="204" text-anchor="middle" font-size="11">no write path to machines</text></g>
+   <g stroke="#1f5c73" stroke-width="1.8" fill="none" marker-end="url(#ar)"><path d="M200 65 L258 100"/><path d="M200 185 L258 150"/><path d="M410 125 L468 125"/><path d="M660 100 L718 70"/><path d="M660 150 L718 180"/></g>
+  </svg>
+  <p class="note">Advice only. Every output goes to a named person. The engine has no write path to equipment.</p>
+ </div>
+ <div class="grid two" style="margin-top:12px">
+  <div class="card"><h3>Where it can connect</h3>
+   <table>
+    <tr><th>Integration point</th><th>Goes in</th><th>Comes out</th></tr>
+    <tr><td>Scheduling or planning tool</td><td>Planned tonnes by front and period (CSV)</td><td>Trips and tonnes per front and fleet, with a simulated range (CSV or JSON)</td></tr>
+    <tr><td>Fleet management data</td><td>Fleet list, payloads, cycle and breakdown records (JSON)</td><td>Refitted breakdown rates and availability</td></tr>
+    <tr><td>Road and path optimiser</td><td>Road graph with distances and grades</td><td>Travel-time matrix; detour when a road closes</td></tr>
+    <tr><td>Any tool with scripting</td><td>HTTP POST of a JSON request</td><td>JSON response</td></tr>
+   </table>
+   <p class="note">Tested here with files only. It has not been tested against Deswik or any fleet management product. A published Deswik scripting manual (2012) describes .NET access and CSV file reading and writing, so a file or web-service route looks feasible, but this needs confirming with the vendor.</p>
+  </div>
+  <div class="card"><h3>Example call</h3>
+   <pre>{ "op": "compare",
+  "n_reps": 10,
+  "config": { "fleets": { "A": { "n": 12 } },
+              "plan_ore_t": 12000 } }</pre>
+   <pre>{ "ok": true, "op": "compare",
+  "gain_S2_vs_S0": { "mean": 0.027, "ci95": 0.013 },
+  "plan": { "trips": [ ... ], "tonnes_by_front": {...} },
+  "seed": 20261004 }</pre>
+   <p class="note">Operations: solve, simulate, compare, fleet_curve, fit_failures. Same request works from this page, the command line and the local service.</p>
+  </div>
+ </div>
+</section>
+
+<!-- ============================ ABOUT ============================ -->
+<section id="about" class="tab">
+ <div class="card">
+  <h3>What this is and is not</h3>
+  <p><b>What it is.</b> A showcase of the Predict, Prescribe, Prove method for haul and crusher flow on a small, notional pit: one pit with four fronts, one crusher, one ROM pad, one waste dump and two truck fleets. A failure model sets breakdown rates, a linear program chooses tonnes and trucks per front, and a discrete-event simulation tests the plan with random breakdowns, loading and dumping times, queues and shift changes.</p>
+  <p><b>What it is not.</b> It is not calibrated to any site, it is not an industrial product, and its figures are not forecasts. Every parameter is a labelled assumption to be replaced with client data. The simulation does not model loader breakdowns, road interaction between trucks, blasting, weather other than a speed cut, or driver behaviour.</p>
+  <p><b>Reading the result.</b> The gain shown is the fall in cost per plan-equivalent tonne at the same fleet cost, where plan-equivalent tonnes are limited by the scarcer of ore and waste. Raw tonnes moved are similar under both dispatch modes in the base case. The optimiser-guided mode mainly holds the planned ore-to-waste mix.</p>
+  <p><b>Method sources.</b> The optimise-then-simulate pairing follows a published Genoa and Vale presentation on a coal mine in Mozambique. The failure-risk step is our addition. Delay terms in the linear program are calibrated from simulated queue times, which is our design choice and not their published method.</p>
+ </div>
+</section>
+</main>
+
+<script src="config.js" onerror="void 0"></script>
+<script>
+"use strict";
+/* ---------------------------------------------------------------- tabs */
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.id===b.dataset.t));
+  if(b.dataset.t==='results') drawResults();
+});
+const $=id=>document.getElementById(id);
+
+/* ---------------------------------------------------------------- engine in a worker */
+const WORKER_SRC=`
+let py=null;
+self.onmessage=async(e)=>{const m=e.data;
+ try{
+  if(m.type==='init'){
+    importScripts(m.base+'pyodide.js');
+    self.postMessage({type:'status',text:'Loading the Python runtime...'});
+    py=await loadPyodide({indexURL:m.base});
+    self.postMessage({type:'status',text:'Loading numpy and scipy...'});
+    await py.loadPackage(['numpy','scipy']);
+    self.postMessage({type:'status',text:'Loading the engine...'});
+    const dirs=new Set(); m.files.forEach(f=>{const p=f.split('/'); p.pop(); let a=''; p.forEach(x=>{a+='/'+x; dirs.add(a);});});
+    py.FS.mkdirTree('/engine'); [...dirs].sort().forEach(d=>py.FS.mkdirTree('/engine'+d));
+    for(const f of m.files){const r=await fetch(m.pyBase+f); py.FS.writeFile('/engine/'+f,new Uint8Array(await r.arrayBuffer()));}
+    py.runPython("import sys; sys.path.insert(0,'/engine'); import twin_api");
+    self.postMessage({type:'ready'});
+  } else if(m.type==='run'){
+    const t0=performance.now();
+    py.globals.set('REQ',m.json);
+    const out=py.runPython('twin_api.run_json(REQ)');
+    self.postMessage({type:'result',id:m.id,json:out,ms:performance.now()-t0});
+  }
+ }catch(err){self.postMessage({type:'error',id:m.id,text:String(err)});}
+};`;
+let worker=null, pending={}, nextId=1;
+async function startEngine(){
+  const here=new URL('.',location.href).href;
+  let base='https://cdn.jsdelivr.net/pyodide/v0.27.7/full/';
+  try{const r=await fetch(here+'pyodide/pyodide.js',{method:'HEAD'}); if(r.ok) base=here+'pyodide/';}catch(e){}
+  const files=await (await fetch('py/manifest.json')).json();
+  worker=new Worker(URL.createObjectURL(new Blob([WORKER_SRC],{type:'text/javascript'})));
+  worker.onmessage=(e)=>{const m=e.data;
+    if(m.type==='status') $('status').textContent=m.text;
+    else if(m.type==='ready'){ $('status').textContent='Engine ready. Choose a scenario and run.'; $('run').disabled=false; $('cmp').disabled=false; }
+    else if(m.type==='result'||m.type==='error'){const p=pending[m.id]; delete pending[m.id]; if(!p) return; m.type==='error'?p.rej(new Error(m.text)):p.res({out:JSON.parse(m.json),ms:m.ms});}
+  };
+  worker.onerror=(e)=>{$('status').textContent='Engine failed to start: '+(e.message||e);};
+  worker.postMessage({type:'init',base,pyBase:here+'py/',files});
+}
+function callEngine(req){return new Promise((res,rej)=>{const id=nextId++; pending[id]={res,rej}; worker.postMessage({type:'run',id,json:JSON.stringify(req)});});}
+
+/* ---------------------------------------------------------------- map geometry (notional layout, px) */
+const NODES={F1:[70,70],F2:[70,140],F3:[70,215],F4:[70,330],J1:[260,200],J2:[450,200],CR:[700,110],RP:[700,200],WD:[700,330]};
+const NODE_LABEL={F1:'Front 1 (ore)',F2:'Front 2 (ore)',F3:'Front 3 (ore)',F4:'Front 4 (waste)',J2:'Junction',CR:'Crusher',RP:'ROM pad',WD:'Waste dump'};
+const ROADS=[['F1','J1'],['F2','J1'],['F3','J1'],['F4','J1'],['J1','J2'],['J2','CR'],['J2','RP'],['J2','WD']];
+const COL={A:['#1f5c73','#9cc7d8'],B:['#d98a1f','#f0cf9c']};
+function polyPos(nodes,cum,f){
+  if(f<=0) return NODES[nodes[0]]; if(f>=1) return NODES[nodes[nodes.length-1]];
+  let k=0; while(k<cum.length-2 && cum[k+1]<f) k++;
+  const a=NODES[nodes[k]], b=NODES[nodes[k+1]], s=(f-cum[k])/Math.max(cum[k+1]-cum[k],1e-9);
+  const bend=(nodes[k]==='J1'&&nodes[k+1]==='J2'||nodes[k]==='J2'&&nodes[k+1]==='J1');
+  return [a[0]+(b[0]-a[0])*s,a[1]+(b[1]-a[1])*s];
+}
+
+/* ---------------------------------------------------------------- timeline from the engine trace */
+let TL=null, H=24, WARM=2;
+function buildTimeline(trace,horizon){
+  const by={}; for(const e of trace){(by[e[1]]??=[]).push(e);}
+  const trucks=Object.keys(by).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  const segs={}, dumps=[], queues=[];
+  for(const id of trucks){
+    const ev=by[id].sort((a,b)=>a[2]-b[2]); let cur=NODES.J2; const S=[];
+    for(const e of ev){
+      const [t,_id,t0,t1]=e;
+      if(t==='m'){const [,,,,nodes,cum,f0,f1,ld]=e; S.push({t0,t1,k:'m',nodes,cum,f0,f1,ld,end:null}); cur=polyPos(nodes,cum,f1); S[S.length-1].end=cur;}
+      else if(t==='r'){S.push({t0,t1,k:'r',p:cur,end:cur});}
+      else {const node=e[4]; const p=NODES[node]||cur; S.push({t0,t1,k:t,node,p,end:p}); cur=p; if(t==='d') dumps.push({t:t1,pay:e[5],ore:node!=='WD'});}
+    }
+    segs[id]=S;
+  }
+  dumps.sort((a,b)=>a.t-b.t);
+  return {trucks,segs,dumps,H:horizon};
+}
+function bs(arr,t){let lo=0,hi=arr.length-1,r=-1; while(lo<=hi){const m=(lo+hi)>>1; if(arr[m].t0<=t){r=m;lo=m+1}else hi=m-1;} return r;}
+function truckState(id,t){
+  const S=TL.segs[id]; const i=bs(S,t); if(i<0) return {k:'g',p:NODES.J2};
+  const s=S[i];
+  if(t<=s.t1){
+    if(s.k==='m'){const f=s.f0+(s.f1-s.f0)*(t-s.t0)/Math.max(s.t1-s.t0,1e-9); return {k:s.ld?'ml':'me',p:polyPos(s.nodes,s.cum,f)};}
+    return {k:s.k,p:s.p,node:s.node};
+  }
+  return {k:'g',p:s.end};
+}
+
+/* ---------------------------------------------------------------- map drawing */
+const map=$('map'), mctx=map.getContext('2d');
+let cumPts=[];
+function drawMap(t){
+  const c=mctx; c.clearRect(0,0,map.width,map.height);
+  c.lineCap='round'; c.strokeStyle='#c9d3d9'; c.lineWidth=9;
+  for(const [a,b] of ROADS){c.beginPath(); c.moveTo(...NODES[a]); c.lineTo(...NODES[b]); c.stroke();}
+  c.strokeStyle='#eef2f4'; c.lineWidth=2; for(const [a,b] of ROADS){c.beginPath(); c.moveTo(...NODES[a]); c.lineTo(...NODES[b]); c.stroke();}
+  c.fillStyle='#1c2b33'; c.font='12px system-ui';
+  for(const [n,p] of Object.entries(NODES)){
+    const sq=['CR','RP','WD'].includes(n), fr=n[0]==='F';
+    c.fillStyle=fr?'#e7f1e8':sq?'#e6edf3':'#f1f1f1'; c.strokeStyle='#8aa0ad'; c.lineWidth=1.5;
+    if(n==='J1') continue;
+    c.beginPath(); c.roundRect(p[0]-22,p[1]-16,44,32,6); c.fill(); c.stroke();
+    c.fillStyle='#1c2b33'; c.textAlign='center'; c.fillText(NODE_LABEL[n]||n,p[0],p[1]+(fr?-22:-22));
+  }
+  c.textAlign='left';
+  if(!TL){c.fillStyle='#5d6b73'; c.fillText('Run a scenario to replay it here.',20,400); return;}
+  const slot={}; let q=0,r=0,mv=0;
+  for(const id of TL.trucks){
+    const st=truckState(id,t); const fleet=id[0]; const col=COL[fleet]; let [x,y]=st.p;
+    const key=(st.node||'')+st.k;
+    if(['q','l','d','i'].includes(st.k)||st.k==='g'){const n=(slot[key]=(slot[key]||0)+1)-1; const ang=n*0.9; const rad=20+7*Math.floor(n/6); x+=Math.cos(ang)*rad*(n?1:0); y+=Math.sin(ang)*rad*(n?1:0)+ (n?0:0);}
+    const R=fleet==='A'?6:5;
+    c.beginPath(); c.arc(x,y,R,0,6.2832);
+    if(st.k==='r'){c.fillStyle='#c0392b'; c.fill(); r++; c.strokeStyle='#fff'; c.lineWidth=1; c.stroke();}
+    else if(st.k==='q'){c.fillStyle='#fff'; c.fill(); c.strokeStyle=col[0]; c.lineWidth=2.4; c.stroke(); q++;}
+    else if(st.k==='i'||st.k==='g'){c.fillStyle='#9aa7ae'; c.fill();}
+    else if(st.k==='ml'){c.fillStyle=col[0]; c.fill(); mv++;}
+    else if(st.k==='me'){c.fillStyle=col[1]; c.fill(); c.strokeStyle=col[0]; c.lineWidth=1; c.stroke(); mv++;}
+    else {c.fillStyle=col[0]; c.fill(); c.strokeStyle='#2e8b57'; c.lineWidth=2; c.stroke(); mv++;}  // loading or dumping
+  }
+  // KPIs
+  let ore=0,waste=0; const D=TL.dumps; let lo=0,hi=D.length-1,idx=-1; while(lo<=hi){const m=(lo+hi)>>1; if(D[m].t<=t){idx=m;lo=m+1}else hi=m-1;}
+  for(let i=0;i<=idx;i++){D[i].ore?ore+=D[i].pay:waste+=D[i].pay;}
+  $('k1').textContent=Math.round(ore).toLocaleString(); $('k2').textContent=Math.round(waste).toLocaleString();
+  $('k3').textContent=q; $('k4').textContent=r; $('k5').textContent=mv; $('k6').textContent=ore>0?(waste/ore).toFixed(2):'-';
+  $('clock').textContent=t.toFixed(1)+' h';
+  drawCum(t);
+}
+
+/* ---------------------------------------------------------------- generic small charts */
+function fitCanvas(cv){const r=cv.getBoundingClientRect(); const d=window.devicePixelRatio||1; if(r.width===0) return null; cv.width=Math.round(r.width*d); cv.height=Math.round(cv.getAttribute('height')*d*(r.width/cv.getAttribute('width'))/(r.width/cv.getAttribute('width'))); const c=cv.getContext('2d'); c.setTransform(d,0,0,d,0,0); cv._w=r.width; cv._h=cv.height/d; return c;}
+function axes(c,W,Ht,xmin,xmax,ymin,ymax,xl,yl,m={l:52,r:12,t:12,b:36}){
+  c.clearRect(0,0,W,Ht); c.strokeStyle='#d9e1e6'; c.fillStyle='#5d6b73'; c.font='11px system-ui'; c.lineWidth=1;
+  const X=v=>m.l+(v-xmin)/(xmax-xmin||1)*(W-m.l-m.r), Y=v=>Ht-m.b-(v-ymin)/(ymax-ymin||1)*(Ht-m.t-m.b);
+  for(let i=0;i<=4;i++){const v=ymin+(ymax-ymin)*i/4; c.beginPath(); c.moveTo(m.l,Y(v)); c.lineTo(W-m.r,Y(v)); c.stroke(); c.textAlign='right'; c.fillText(Math.abs(v)>=1000?Math.round(v).toLocaleString():(+v.toFixed(2)),m.l-6,Y(v)+4);}
+  c.textAlign='center'; if(xl) c.fillText(xl,(m.l+W-m.r)/2,Ht-4);
+  if(yl){c.save(); c.translate(11,(m.t+Ht-m.b)/2); c.rotate(-Math.PI/2); c.fillText(yl,0,0); c.restore();}
+  return {X,Y,m};
+}
+function drawCum(t){
+  const cv=$('cum'); const c=fitCanvas(cv); if(!c) return; const W=cv._w,Ht=cv._h;
+  let ymax=1; if(TL){let o=0,w=0; for(const d of TL.dumps){d.ore?o+=d.pay:w+=d.pay;} ymax=Math.max(o,w,1000)*1.05;}
+  const A=axes(c,W,Ht,0,H,0,ymax,'hours','tonnes'); if(!TL) return;
+  let o=0,w=0; c.lineWidth=2;
+  const pts=[[0,0,0]]; for(const d of TL.dumps){d.ore?o+=d.pay:w+=d.pay; pts.push([d.t,o,w]);}
+  for(const [idx,col] of [[1,'#1f5c73'],[2,'#d98a1f']]){c.strokeStyle=col; c.beginPath(); pts.forEach((p,i)=>{i?c.lineTo(A.X(p[0]),A.Y(p[idx])):c.moveTo(A.X(p[0]),A.Y(p[idx]));}); c.stroke();}
+  c.strokeStyle='#c0392b'; c.lineWidth=1; c.beginPath(); c.moveTo(A.X(t),A.m.t); c.lineTo(A.X(t),Ht-A.m.b); c.stroke();
+  c.fillStyle='#1f5c73'; c.textAlign='left'; c.fillText('ore',A.X(H)-60,A.Y(pts[pts.length-1][1])-4); c.fillStyle='#d98a1f'; c.fillText('waste',A.X(H)-60,A.Y(pts[pts.length-1][2])-4);
+}
+function bars(cv,labels,vals,errs,colors,unit,yminOverride){
+  const c=fitCanvas(cv); if(!c) return; const W=cv._w,Ht=cv._h;
+  const hi=Math.max(...vals.map((v,i)=>v+(errs[i]||0)))*1.06; const lo=yminOverride!==undefined?yminOverride:Math.min(0,...vals.map((v,i)=>v-(errs[i]||0)))*1.1;
+  const A=axes(c,W,Ht,0,labels.length,lo,hi,'',unit||'',{l:58,r:10,t:12,b:46});
+  const bw=(W-A.m.l-A.m.r)/labels.length*0.62;
+  labels.forEach((l,i)=>{const x=A.X(i+0.5); c.fillStyle=colors[i%colors.length]; c.fillRect(x-bw/2,Math.min(A.Y(vals[i]),A.Y(0>lo?0:lo)),bw,Math.abs(A.Y(vals[i])-A.Y(0>lo?0:lo)));
+    if(errs[i]){c.strokeStyle='#1c2b33'; c.lineWidth=1.4; c.beginPath(); c.moveTo(x,A.Y(vals[i]-errs[i])); c.lineTo(x,A.Y(vals[i]+errs[i])); c.moveTo(x-5,A.Y(vals[i]-errs[i])); c.lineTo(x+5,A.Y(vals[i]-errs[i])); c.moveTo(x-5,A.Y(vals[i]+errs[i])); c.lineTo(x+5,A.Y(vals[i]+errs[i])); c.stroke();}
+    c.fillStyle='#5d6b73'; c.textAlign='center'; l.split('\n').forEach((ln,j)=>c.fillText(ln,x,Ht-A.m.b+14+j*12));});
+}
+function lines(cv,series,xl,yl){
+  const c=fitCanvas(cv); if(!c) return; const W=cv._w,Ht=cv._h; let xs=[],ys=[]; series.forEach(s=>s.pts.forEach(p=>{xs.push(p[0]);ys.push(p[1]);}));
+  const A=axes(c,W,Ht,Math.min(...xs),Math.max(...xs),Math.min(...ys)*0.97,Math.max(...ys)*1.03,xl,yl,{l:70,r:12,t:12,b:36});
+  series.forEach((s,k)=>{c.strokeStyle=s.col; c.fillStyle=s.col; c.lineWidth=2; c.beginPath(); s.pts.forEach((p,i)=>{i?c.lineTo(A.X(p[0]),A.Y(p[1])):c.moveTo(A.X(p[0]),A.Y(p[1]));}); c.stroke(); s.pts.forEach(p=>{c.beginPath(); c.arc(A.X(p[0]),A.Y(p[1]),3,0,6.3); c.fill();}); c.textAlign='left'; c.fillText(s.name,A.m.l+8+k*120,A.m.t+10);});
+}
+
+/* ---------------------------------------------------------------- replay controls */
+let tNow=0, playing=false, last=0;
+function setT(t){tNow=Math.max(0,Math.min(H,t)); $('seek').value=Math.round(tNow/H*1000); drawMap(tNow);}
+$('seek').oninput=e=>{setT(+e.target.value/1000*H);};
+$('play').onclick=()=>{playing=!playing; $('play').textContent=playing?'Pause':'Play'; if(playing){if(tNow>=H) tNow=0; last=performance.now(); requestAnimationFrame(tick);}};
+function tick(ts){ if(!playing) return; const dt=(ts-last)/1000; last=ts; setT(tNow+dt*(+$('spd').value)/3600); if(tNow>=H){playing=false; $('play').textContent='Play'; return;} requestAnimationFrame(tick); }
+['nA','nB','cp'].forEach(id=>$(id).oninput=()=>{$(id+'v').textContent=$(id).value;});
+
+/* ---------------------------------------------------------------- running the engine */
+const M={tonnes_shift:['Tonnes moved per shift',0],ore_shift:['Ore per shift',0],waste_shift:['Waste per shift',0],strip_ratio:['Strip ratio',2],pet_shift:['Plan-equivalent tonnes per shift',0],cycle_A:['Cycle time, fleet A (min)',1],queue_loader_min:['Queue at loaders (min)',2],queue_crusher_min:['Queue at crusher (min)',2],truck_util:['Truck productive share',2],truck_downtime_share:['Truck downtime share',2],cost_per_t:['Cost per tonne moved (AUD)',2],unplanned:['Unplanned stops',1],planned:['Planned stops',1]};
+function fmt(v,d){return d===0?Math.round(v).toLocaleString():v.toFixed(d);}
+function showStats(s){
+  let h='<table><tr><th>Measure</th><th>Mean</th><th>95% interval (±)</th></tr>';
+  for(const [k,[lab,d]] of Object.entries(M)){const x=s[k]; if(!x) continue; h+=`<tr><td>${lab}</td><td>${fmt(x.mean,d)}</td><td>${x.ci95==null?'n/a':fmt(x.ci95,d===0?0:Math.max(d,2))}</td></tr>`;}
+  $('stats').innerHTML=h+'</table>';
+}
+function showPlan(p){
+  if(!p){$('plan').textContent='Fixed assignment: each truck stays on one front for the shift.'; return;}
+  let h='<table><tr><th>Front</th><th>Fleet</th><th>Trips</th><th>Tonnes</th></tr>';
+  for(const t of p.trips) h+=`<tr><td>${t.front} to ${t.destination}</td><td>${t.fleet}</td><td>${t.trips_per_shift.toFixed(1)}</td><td>${Math.round(t.tonnes_per_shift).toLocaleString()}</td></tr>`;
+  $('plan').innerHTML=h+`</table><div class="note" style="margin-top:6px">Plan scale ${p.plan_scale.toFixed(2)}. Binding limits: ${p.tight_constraints.join(', ')||'none'}.</div>`;
+}
+function setReq(req,res){ $('reqj').textContent=JSON.stringify(req,null,1); const r=JSON.parse(JSON.stringify(res)); if(r.trace){r.trace='['+r.trace.length+' events omitted]';} $('resj').textContent=JSON.stringify(r,null,1).slice(0,6000); }
+function cfgFromUI(){
+  return {horizon_h:+$('hz').value, warmup_h:Math.min(2,+$('hz').value/6), compliance:+$('cp').value/100,
+          fleets:{A:{n:+$('nA').value},B:{n:+$('nB').value}}};
+}
+let lastRun=null;
+function busy(on,msg){['run','cmp'].forEach(i=>$(i).disabled=on); if(msg) $('status').textContent=msg;}
+$('run').onclick=async()=>{
+  const req={op:'simulate',scenario:$('scn').value,n_reps:+$('nr').value,trace:true,config:cfgFromUI()};
+  busy(true,'Running '+req.n_reps+' replication(s)...'); playing=false; $('play').textContent='Play';
+  try{ const {out,ms}=await callEngine(req); if(!out.ok) throw new Error(out.error);
+    H=req.config.horizon_h; WARM=req.config.warmup_h; TL=buildTimeline(out.trace,H); setT(0); showStats(out.summary); showPlan(out.plan); setReq(req,out);
+    lastRun={req,summary:out.summary}; $('cmpt').textContent=''; clearCmp();
+    $('status').textContent=`Done in ${(ms/1000).toFixed(1)} s. Press Play to replay replication 1.`;
+  }catch(e){ $('status').textContent='Error: '+e.message; } busy(false);
+};
+function clearCmp(){const cv=$('cmpc'); const c=fitCanvas(cv); if(c) c.clearRect(0,0,cv._w,cv._h);}
+$('cmp').onclick=async()=>{
+  const req={op:'compare',n_reps:Math.max(3,+$('nr').value),trace:true,config:Object.assign(cfgFromUI(),{})};
+  busy(true,'Running '+req.n_reps+' paired replications of S0 and S2...'); playing=false; $('play').textContent='Play';
+  try{ const {out,ms}=await callEngine(req); if(!out.ok) throw new Error(out.error);
+    H=req.config.horizon_h; TL=buildTimeline(out.trace,H); setT(0); showStats(out.S2); showPlan(out.plan); setReq(req,out);
+    const a=out.S0.pet_shift,b=out.S2.pet_shift;
+    bars($('cmpc'),['S0 fixed','S2 optimiser'],[a.mean,b.mean],[a.ci95,b.ci95],['#9aa7ae','#1f5c73'],'t per shift',Math.min(a.mean,b.mean)*0.9);
+    const g=out.gain_S2_vs_S0; $('cmpt').innerHTML=`Plan-equivalent tonnes per shift. Gain in cost per plan-equivalent tonne: <b>${(g.mean*100).toFixed(1)}%</b> ± ${(g.ci95*100).toFixed(1)}% (95%, ${req.n_reps} paired replications). Replay shows S2.`;
+    lastRun={req,summary:out.S2}; $('status').textContent=`Done in ${(ms/1000).toFixed(1)} s.`;
+  }catch(e){ $('status').textContent='Error: '+e.message; } busy(false);
+};
+
+/* ---------------------------------------------------------------- precomputed results tab */
+let RES=null;
+async function loadResults(){try{RES=await (await fetch('data/results.json')).json();}catch(e){RES=null;}}
+function drawResults(){
+  if(!RES){$('r1t').textContent='Precomputed results file not found.'; return;}
+  const b=RES.base, k='pet_shift';
+  const rows=[['S0\nfixed','S0'],['S0*\nbest fixed','S0star'],['S2\nadvice','S2'],['S2, 80%\nfollow','S2_compliance_80'],['S2, 60%\nfollow','S2_compliance_60']];
+  const lo=Math.min(...rows.map(r=>b[r[1]][k].mean))*0.97;
+  bars($('r1'),rows.map(r=>r[0]),rows.map(r=>b[r[1]][k].mean),rows.map(r=>b[r[1]][k].ci),['#9aa7ae','#7fa7ba','#1f5c73','#2f8aa8','#5fa0b8'],'t per shift',lo);
+  const g0=b.gain_S2_vs_S0,g1=b.gain_S2_vs_S0star;
+  $('r1t').innerHTML=`Gain of S2 in cost per plan-equivalent tonne: <b>${(g0.mean*100).toFixed(1)}% ± ${(g0.ci*100).toFixed(1)}%</b> against S0, <b>${(g1.mean*100).toFixed(1)}% ± ${(g1.ci*100).toFixed(1)}%</b> against the best fixed assignment (S0*). Bars show the 95% interval over 30 replications.`;
+  const ns=Object.keys(RES.fleet).map(Number).sort((a,b)=>a-b); if(!ns.includes(12)) ns.push(12); ns.sort((a,b)=>a-b);
+  const g=n=>n===12?RES.base:RES.fleet[String(n)];
+  lines($('r2'),[{name:'S0 fixed',col:'#9aa7ae',pts:ns.map(n=>[n+8,g(n).S0.tonnes_shift.mean])},{name:'S2 advice',col:'#1f5c73',pts:ns.map(n=>[n+8,g(n).S2.tonnes_shift.mean])}],'trucks in total','tonnes moved per shift');
+  const cs=ns.map(n=>[n+8,g(n).S0.cost_per_t.mean]); const best=cs.reduce((a,c)=>c[1]<a[1]?c:a);
+  const s24=g(24); $('r2t').innerHTML=`Both dispatch rules rise by about 2,000 t per shift for each added fleet A truck up to 16 (24 trucks in total). Beyond that the optimiser's plan is limited by the upper rate limits of the three ore fronts (it re-solves for each fleet size and reports them as binding), so S2 stays near ${Math.round(s24.S2.tonnes_shift.mean).toLocaleString()} t per shift. Fixed assignment keeps moving more tonnes, with longer queues and a higher cost per tonne. Extra trucks beyond this point need more face capacity, not better dispatch.`;
+  const SHORT={'travel variability x2':'Travel\nvar. x2','service times +20%':'Service\n+20%','service times -20%':'Service\n-20%','speeds -15%':'Speed\n-15%','speeds +15%':'Speed\n+15%','front band +-10%':'Band\n+-10%','front band +-30%':'Band\n+-30%','strip ratio 1.5':'Strip\n1.5','strip ratio 2.5':'Strip\n2.5'};
+  const oat=Object.entries(RES.oat).filter(([n])=>!n.includes('loader'));
+  bars($('r3'),['Base'].concat(oat.map(([n])=>SHORT[n]||n)),[b.gain_S2_vs_S0.mean*100].concat(oat.map(([,v])=>v.gain_S2_vs_S0.mean*100)),[b.gain_S2_vs_S0.ci*100].concat(oat.map(([,v])=>v.gain_S2_vs_S0.ci*100)),['#1f5c73'],'gain, %');
+  let t='<table><tr><th>Scenario</th><th>Result</th></tr>';
+  const w=RES.wet; t+=`<tr><td>S3 wet season (speeds -25%)</td><td>Tonnes per shift fall from ${Math.round(b.S0.tonnes_shift.mean).toLocaleString()} to ${Math.round(w.S0.tonnes_shift.mean).toLocaleString()}; advice still gains ${(w.gain_S2_vs_S0.mean*100).toFixed(1)}%</td></tr>`;
+  const o=RES.outage; t+=`<tr><td>S4 crusher outage, 4 h</td><td>With ROM pad: ${Math.round(-o.S0_pad.loss_vs_S0_noout_crushed)} t per shift change in crusher feed. Without pad: ${Math.round(-o.S0_nopad.loss_vs_S0_noout_crushed)} t per shift, longer crusher queue</td></tr>`;
+  const p=RES.pm; t+=`<tr><td>S5 predictive maintenance</td><td>30% / 50% / 70% of stops caught early: gain ${(p.S5_phi30.gain_vs_S0.mean*100).toFixed(1)}% / ${(p.S5_phi50.gain_vs_S0.mean*100).toFixed(1)}% / ${(p.S5_phi70.gain_vs_S0.mean*100).toFixed(1)}%</td></tr>`;
+  $('r4').innerHTML=t+'</table><p class="note">All values use notional data. Replications: 30 per scenario, seed 20261004.</p>';
+}
+window.addEventListener('resize',()=>{ if($('results').classList.contains('on')) drawResults(); drawCum(tNow); });
+
+/* ---------------------------------------------------------------- optional Supabase (public anon key, row-level security) */
+const SB=(window.SUPABASE_URL&&window.SUPABASE_ANON_KEY)?{u:window.SUPABASE_URL,k:window.SUPABASE_ANON_KEY}:null;
+function esc(t){return String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function sb(path,opt={}){return fetch(SB.u+'/rest/v1/'+path,Object.assign({headers:{apikey:SB.k,Authorization:'Bearer '+SB.k,'Content-Type':'application/json',Prefer:'return=minimal'}},opt));}
+if(SB){ $('dbmsg').textContent='Saves a run (settings and key statistics) to the shared team database.'; $('save').style.display=''; $('load').style.display='';
+  $('save').onclick=async()=>{ if(!lastRun){$('saved').textContent='Run a scenario first.'; return;} const s=lastRun.summary; const row={label:$('scn').value+' '+new Date().toISOString().slice(0,16),scenario:lastRun.req.scenario||lastRun.req.op,config:lastRun.req.config,summary:{tonnes_shift:s.tonnes_shift,pet_shift:s.pet_shift,cost_per_t:s.cost_per_t,queue_loader_min:s.queue_loader_min},engine_version:'0.1',seed:20261004};
+    try{const r=await sb('twin_runs',{method:'POST',body:JSON.stringify(row)}); $('saved').textContent=r.ok?'Saved.':'Save failed ('+r.status+'). Has supabase.sql been run?';}catch(e){$('saved').textContent='Database not reachable.';}};
+  $('load').onclick=async()=>{ try{const r=await sb('twin_runs?select=created_at,label,scenario,summary&order=created_at.desc&limit=8',{headers:{apikey:SB.k,Authorization:'Bearer '+SB.k}}); if(!r.ok){$('saved').textContent='Could not load ('+r.status+').'; return;} const rows=await r.json(); $('saved').innerHTML=rows.length?'<table>'+rows.map(x=>`<tr><td>${esc(x.label)}</td><td>${Math.round(+x.summary?.pet_shift?.mean||0).toLocaleString()} t</td></tr>`).join('')+'</table>':'No saved runs yet.';}catch(e){$('saved').textContent='Database not reachable.';}};
+}
+
+/* ---------------------------------------------------------------- start */
+drawMap(0); drawCum(0); loadResults(); startEngine().catch(e=>{$('status').textContent='Could not start: '+e.message;});
+</script>
+</body>
+</html>
